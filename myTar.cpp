@@ -8,7 +8,13 @@
 #include <unistd.h>
 using namespace std;
 
-void archive() {}
+void archive(const char *fileName) {
+  const char *fileNameExtension = strrchr(fileName, '.');
+  if (!fileNameExtension || strcmp(fileNameExtension, ".mtar") != 0) {
+    fprintf(stderr, "myTar: \tarchive: incorrect file extension\n\n");
+    exit(EXIT_FAILURE);
+  }
+}
 
 void extract(const char *fileName) {
   const char *fileNameExtension = strrchr(fileName, '.');
@@ -40,7 +46,7 @@ int main(int argc, char **argv) {
                       "[files...]\n\n");
       exit(EXIT_FAILURE);
     }
-    archive();
+    archive(argv[2]);
   } else if (strcmp(argv[1], "-x") == 0) {
     if (argc < 3) {
       fprintf(stderr, "myTar:\textract: ./myTar -x file.mtar\n\n");
