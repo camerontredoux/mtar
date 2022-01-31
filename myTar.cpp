@@ -7,6 +7,10 @@
 #include <unistd.h>
 using namespace std;
 
+void archive() {}
+
+void extract() {}
+
 int main(int argc, char **argv) {
   if (argc < 2) {
     fprintf(stderr, "myTar:\tarchive: ./myTar -a file.mtar file1 "
@@ -20,8 +24,17 @@ int main(int argc, char **argv) {
            "archive\n\t\tfiles: optional additional files to archive\n\t-x: "
            "extract\n\t\tfile.mtar: archived file to extract files from\n\n");
   } else if (strcmp(argv[1], "-a") == 0) {
-    printf("archive\n");
+    if (argc < 3) {
+      fprintf(stderr, "myTar:\tarchive: ./myTar -a file.mtar file1 "
+                      "[files...]\n\n");
+      exit(EXIT_FAILURE);
+    }
+    archive();
   } else if (strcmp(argv[1], "-x") == 0) {
-    printf("extract\n");
+    if (argc < 3) {
+      fprintf(stderr, "myTar:\textract: ./myTar -x file.mtar\n\n");
+      exit(EXIT_FAILURE);
+    }
+    extract();
   }
 }
