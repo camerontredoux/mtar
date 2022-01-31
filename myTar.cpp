@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +10,17 @@ using namespace std;
 
 void archive() {}
 
-void extract() {}
+void extract(const char *fileName) {
+  const char *fileNameExtension = strrchr(fileName, '.');
+  if (!fileNameExtension || strcmp(fileNameExtension, ".mtar") != 0) {
+    fprintf(stderr, "myTar: \textract: incorrect file extension\n\n");
+    exit(EXIT_FAILURE);
+  }
+  FILE *fptr = fopen(fileName, "w");
+  if (fptr) {
+    fclose(fptr);
+  }
+}
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -35,6 +46,6 @@ int main(int argc, char **argv) {
       fprintf(stderr, "myTar:\textract: ./myTar -x file.mtar\n\n");
       exit(EXIT_FAILURE);
     }
-    extract();
+    extract(argv[2]);
   }
 }
