@@ -50,4 +50,4 @@
 
 - chmod
 - utime
-- utimebuf
+- utimbuf
