@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,11 +55,6 @@ int main(int argc, char **argv) {
   if (argc < 2) {
     usage_err();
     exit(1);
-  }
-
-  if (strcmp(argv[1], "--help") == 0) {
-    help();
-    exit(0);
   }
 
   if (strcmp(argv[1], "-a") == 0) {
