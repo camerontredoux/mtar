@@ -26,6 +26,14 @@ void file_err(const char *type) {
   fprintf(stderr, "myTar: \t%s: incorrect file extension\n\n", type);
 }
 
+void check_extension(const char *fileName) {
+  const char *fileNameExtension = strrchr(fileName, '.');
+  if (!fileNameExtension || strcmp(fileNameExtension, ".mtar") != 0) {
+    file_err("archive");
+    exit(1);
+  }
+}
+
 char *read_file(FILE *fptr, off_t size) {
   char *file_content = (char *)malloc(sizeof(char) * size);
   int bytes_read = fread(file_content, sizeof(char), size, fptr);
@@ -70,11 +78,6 @@ void archive(const char *fileName, FILE *tarptr) {
 }
 
 void extract(const char *fileName) {
-  const char *fileNameExtension = strrchr(fileName, '.');
-  if (!fileNameExtension || strcmp(fileNameExtension, ".mtar") != 0) {
-    file_err("extract");
-    exit(1);
-  }
   FILE *fptr = fopen(fileName, "r");
   if (fptr) {
     fclose(fptr);
@@ -89,17 +92,13 @@ int main(int argc, char **argv) {
 
   /* ARCHIVE */
   if (strcmp(argv[1], "-a") == 0) {
-    if (argc < 3) {
+    if (argc < 4) {
       fprintf(stderr,
               "myTar:\tarchive: ./myTar -a file.mtar file1 [files...]\n\n");
       exit(1);
     }
 
-    const char *fileNameExtension = strrchr(argv[2], '.');
-    if (!fileNameExtension || strcmp(fileNameExtension, ".mtar") != 0) {
-      file_err("archive");
-      exit(1);
-    }
+    check_extension(argv[2]);
 
     FILE *tarptr = fopen(argv[2], "w");
     if (!tarptr) {
@@ -118,6 +117,9 @@ int main(int argc, char **argv) {
       fprintf(stderr, "myTar:\textract: ./myTar -x file.mtar\n\n");
       exit(1);
     }
+
+    check_extension(argv[2]);
+
     extract(argv[2]);
   }
   /* HELP */
