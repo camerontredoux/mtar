@@ -16,19 +16,22 @@ using namespace std;
 #define st_mtim st_mtimespec
 #endif
 
-void help() {
+void help()
+{
   printf("myTar:\t-a: archive\n\t\tfile.mtar: name of archive file\n\t\tfile1: "
          "must have at least one file to "
          "archive\n\t\tfiles: optional additional files to archive\n\t-x: "
          "extract\n\t\tfile.mtar: archived file to extract files from\n\n");
 }
 
-void usage_err() {
+void usage_err()
+{
   fprintf(stderr, "myTar:\tarchive: ./myTar -a file.mtar file1 "
                   "[files...]\n\textract: ./myTar -x file.mtar\n\n");
 }
 
-void file_err(const char *type) {
+void file_err(const char *type)
+{
   fprintf(stderr, "myTar: \t%s: incorrect file extension\n\n", type);
 }
 
@@ -52,13 +55,15 @@ char *read_file(FILE *fptr, off_t size) {
 
 void archive(const char *fileName, FILE *tarptr) {
   FILE *fptr = fopen(fileName, "r");
-  if (!fptr) {
+  if (!fptr)
+  {
     perror("fopen()");
     exit(1);
   }
 
   struct stat sb;
-  if (stat(fileName, &sb) == -1) {
+  if (stat(fileName, &sb) == -1)
+  {
     perror("stat()");
     exit(1);
   }
@@ -85,13 +90,16 @@ void archive(const char *fileName, FILE *tarptr) {
 
 void extract(const char *fileName) {
   FILE *fptr = fopen(fileName, "r");
-  if (fptr) {
+  if (fptr)
+  {
     fclose(fptr);
   }
 }
 
-int main(int argc, char **argv) {
-  if (argc < 2) {
+int main(int argc, char **argv)
+{
+  if (argc < 2)
+  {
     usage_err();
     exit(1);
   }
