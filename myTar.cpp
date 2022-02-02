@@ -16,22 +16,19 @@ using namespace std;
 #define st_mtim st_mtimespec
 #endif
 
-void help()
-{
+void help() {
   printf("myTar:\t-a: archive\n\t\tfile.mtar: name of archive file\n\t\tfile1: "
          "must have at least one file to "
          "archive\n\t\tfiles: optional additional files to archive\n\t-x: "
          "extract\n\t\tfile.mtar: archived file to extract files from\n\n");
 }
 
-void usage_err()
-{
+void usage_err() {
   fprintf(stderr, "myTar:\tarchive: ./myTar -a file.mtar file1 "
                   "[files...]\n\textract: ./myTar -x file.mtar\n\n");
 }
 
-void file_err(const char *type)
-{
+void file_err(const char *type) {
   fprintf(stderr, "myTar: \t%s: incorrect file extension\n\n", type);
 }
 
@@ -50,20 +47,19 @@ char *read_file(FILE *fptr, off_t size) {
     perror("fread()");
     exit(1);
   }
+  file_content[size] = '\0';
   return file_content;
 }
 
-void archive(const char *fileName, FILE *tarptr) {
+void archive(const char *fileName, FILE *mtarptr) {
   FILE *fptr = fopen(fileName, "r");
-  if (!fptr)
-  {
+  if (!fptr) {
     perror("fopen()");
     exit(1);
   }
 
   struct stat sb;
-  if (stat(fileName, &sb) == -1)
-  {
+  if (stat(fileName, &sb) == -1) {
     perror("stat()");
     exit(1);
   }
@@ -72,11 +68,11 @@ void archive(const char *fileName, FILE *tarptr) {
     printf("%lu\n", strlen(fileName));
     printf("%s\n", fileName);
 
-    fwrite(&sb, sizeof(struct stat), 1, tarptr);
-    fwrite(fileName, sizeof(char), strlen(fileName) + 1, tarptr);
+    fwrite(&sb, sizeof(struct stat), 1, mtarptr);
+    fwrite(fileName, sizeof(char), strlen(fileName), mtarptr);
 
     char *file_content = read_file(fptr, sb.st_size);
-    fwrite(file_content, sizeof(char), sb.st_size, tarptr);
+    fwrite(file_content, sizeof(char), sb.st_size, mtarptr);
     free(file_content);
 
     fclose(fptr);
@@ -88,18 +84,28 @@ void archive(const char *fileName, FILE *tarptr) {
   }
 }
 
-void extract(const char *fileName) {
-  FILE *fptr = fopen(fileName, "r");
-  if (fptr)
-  {
-    fclose(fptr);
+void extract(const char *mtarname) {
+  FILE *mtarptr = fopen(mtarname, "r");
+  if (!mtarptr) {
+    perror("fopen()");
+    exit(1);
   }
+
+  struct stat sb;
+
+  fread(&sb, sizeof(struct stat), 1, mtarptr);
+  char *fileName = read_file(mtarptr, 3);
+  printf("%s\n", fileName);
+  free(fileName);
+
+  char *file_content = read_file(mtarptr, sb.st_size);
+  printf("%s\n", file_content);
+  free(file_content);
+  fclose(mtarptr);
 }
 
-int main(int argc, char **argv)
-{
-  if (argc < 2)
-  {
+int main(int argc, char **argv) {
+  if (argc < 2) {
     usage_err();
     exit(1);
   }
@@ -114,16 +120,16 @@ int main(int argc, char **argv)
 
     check_extension(argv[2]);
 
-    FILE *tarptr = fopen(argv[2], "w");
-    if (!tarptr) {
+    FILE *mtarptr = fopen(argv[2], "w");
+    if (!mtarptr) {
       perror("fopen()");
       exit(1);
     }
     for (int i = 3; i < argc; i++) {
-      archive(argv[i], tarptr);
+      archive(argv[i], mtarptr);
     }
 
-    fclose(tarptr);
+    fclose(mtarptr);
   }
   /*EXTRACT*/
   else if (strcmp(argv[1], "-x") == 0) {
