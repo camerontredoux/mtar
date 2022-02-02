@@ -26,36 +26,47 @@ void file_err(const char *type) {
   fprintf(stderr, "myTar: \t%s: incorrect file extension\n\n", type);
 }
 
-struct tarFILE {
-  const char *fileName;
-  long permissions;
-  long long a_timestamp;
-  long long c_timestamp;
-  long long m_timestamp;
-  void *content;
-};
+char *read_file(FILE *fptr, off_t size) {
+  char *file_content = (char *)malloc(sizeof(char) * size);
+  int bytes_read = fread(file_content, sizeof(char), size, fptr);
+  if (bytes_read < 0) {
+    perror("fread()");
+    exit(1);
+  }
+  return file_content;
+}
 
-tarFILE *archive(const char *fileName) {
+void archive(const char *fileName, FILE *tarptr) {
   FILE *fptr = fopen(fileName, "r");
   if (!fptr) {
     perror("fopen()");
     exit(1);
   }
+
   struct stat sb;
   if (stat(fileName, &sb) == -1) {
     perror("stat()");
     exit(1);
   }
-  tarFILE *tfptr = (tarFILE *)malloc(sizeof(tarFILE));
+
   if (S_ISREG(sb.st_mode)) {
-    tfptr->fileName = fileName;
-    tfptr->permissions = sb.st_mode;
-    tfptr->a_timestamp = sb.st_atim.tv_sec;
-    tfptr->c_timestamp = sb.st_ctim.tv_sec;
-    tfptr->m_timestamp = sb.st_mtim.tv_sec;
+    printf("%lu\n", strlen(fileName));
+    printf("%s\n", fileName);
+
+    fwrite(&sb, sizeof(struct stat), 1, tarptr);
+    fwrite(fileName, sizeof(char), strlen(fileName) + 1, tarptr);
+
+    char *file_content = read_file(fptr, sb.st_size);
+    fwrite(file_content, sizeof(char), sb.st_size, tarptr);
+    free(file_content);
+
+    fclose(fptr);
+  } else {
+    fprintf(
+        stderr,
+        "myTar:\tarchive: incorrect file type (must be a regular file)\n\n");
+    exit(1);
   }
-  fclose(fptr);
-  return tfptr;
 }
 
 void extract(const char *fileName) {
@@ -76,62 +87,47 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  vector<tarFILE *> tar_files;
+  /* ARCHIVE */
   if (strcmp(argv[1], "-a") == 0) {
     if (argc < 3) {
       fprintf(stderr,
               "myTar:\tarchive: ./myTar -a file.mtar file1 [files...]\n\n");
       exit(1);
     }
+
     const char *fileNameExtension = strrchr(argv[2], '.');
     if (!fileNameExtension || strcmp(fileNameExtension, ".mtar") != 0) {
       file_err("archive");
       exit(1);
     }
-    FILE *fptr = fopen(argv[2], "w");
-    if (!fptr) {
+
+    FILE *tarptr = fopen(argv[2], "w");
+    if (!tarptr) {
       perror("fopen()");
       exit(1);
     }
     for (int i = 3; i < argc; i++) {
-      tarFILE *current_file = archive(argv[i]);
-      tar_files.push_back(current_file);
+      archive(argv[i], tarptr);
     }
-    int bytes_written = fwrite(&tar_files, sizeof(tarFILE),
-                               tar_files.size() * sizeof(tarFILE), fptr);
-    printf("%d\n", bytes_written);
-    fclose(fptr);
-  } else if (strcmp(argv[1], "-x") == 0) {
+
+    fclose(tarptr);
+  }
+  /*EXTRACT*/
+  else if (strcmp(argv[1], "-x") == 0) {
     if (argc < 3) {
       fprintf(stderr, "myTar:\textract: ./myTar -x file.mtar\n\n");
       exit(1);
     }
     extract(argv[2]);
-  } else if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+  }
+  /* HELP */
+  else if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
     help();
     exit(0);
-  } else {
+  }
+  /* ERROR */
+  else {
     usage_err();
     exit(1);
   }
-  for (tarFILE *t : tar_files) {
-    printf("%s\n", t->fileName);
-    free(t);
-  }
-
-  FILE *fptr = fopen(argv[2], "r");
-  if (!fptr) {
-    perror("fopen()");
-    exit(1);
-  }
-  vector<tarFILE *> read_files;
-  fseek(fptr, 0, SEEK_END);
-  int size = ftell(fptr);
-  rewind(fptr);
-  int bytes_read = fread(&read_files, sizeof(tarFILE), size, fptr);
-  printf("%d\n", bytes_read);
-  // for (tarFILE *f : tar_files) {
-  //   printf("f:%s\n", f->fileName);
-  // }
-  fclose(fptr);
 }
