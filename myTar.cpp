@@ -10,6 +10,12 @@
 
 using namespace std;
 
+#ifdef __APPLE__
+#define st_atim st_atimespec
+#define st_ctim st_ctimespec
+#define st_mtim st_mtimespec
+#endif
+
 void help() {
   printf("myTar:\t-a: archive\n\t\tfile.mtar: name of archive file\n\t\tfile1: "
          "must have at least one file to "
@@ -120,6 +126,11 @@ int main(int argc, char **argv) {
 
     check_extension(argv[2]);
 
+    FILE *tarptr = fopen(argv[2], "r");
+    if (!tarptr) {
+      perror("fopen()");
+      exit(1);
+    }
     extract(argv[2]);
   }
   /* HELP */
