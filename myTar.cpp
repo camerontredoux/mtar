@@ -1,19 +1,13 @@
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <unistd.h>
+#include <time.h>
+#include <utime.h>
 
 using namespace std;
-
-#ifdef __APPLE__
-#define st_atim st_atimespec
-#define st_ctim st_ctimespec
-#define st_mtim st_mtimespec
-#endif
 
 void help() {
   printf("myTar:\t-a: archive\n\t\tfile.mtar: name of archive file\n\t\tfile1: "
@@ -108,6 +102,7 @@ void extract(const char *mtarname) {
       perror("fread() stat buffer");
       exit(1);
     }
+
     char *fileName = read_file(mtarptr, fileName_length);
     char *file_content = read_file(mtarptr, sb.st_size);
 
@@ -116,9 +111,21 @@ void extract(const char *mtarname) {
       perror("fopen() create file");
       exit(1);
     }
+
+    chmod(fileName, sb.st_mode);
+
     fwrite(file_content, sizeof(char), sb.st_size, fptr);
 
     printf("extracted %s (%lu bytes)\n", fileName, sb.st_size);
+
+    // struct utimbuf tb;
+    // tb.actime = sb.st_atim.tv_sec;
+    // tb.modtime = sb.st_mtim.tv_sec;
+    // if (utime(fileName, &tb) == -1) {
+    //   perror("utime()");
+    //   exit(1);
+    // }
+    // printf("atime: %lu, mtime: %lu\n", tb.actime, tb.modtime);
 
     fclose(fptr);
     free(fileName);
