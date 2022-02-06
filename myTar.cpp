@@ -41,6 +41,11 @@ void check_extension(const char *fileName)
 char *read_file(FILE *fptr, off_t size)
 {
   char *file_content = (char *)malloc(sizeof(char) * size);
+  if (!file_content)
+  {
+    fprintf(stderr, "malloc failed to allocate space for file content\n");
+    exit(1);
+  }
   if (fread(file_content, sizeof(char), size, fptr) < size)
   {
     perror("fread() file content");
