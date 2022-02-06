@@ -55,6 +55,15 @@ char *read_file(FILE *fptr, off_t size)
   return file_content;
 }
 
+void print_status(const char *type, const char *fileName, off_t size)
+{
+#ifdef __APPLE__
+  printf("%s %s (%lld bytes)\n", type, fileName, size);
+#else
+  printf("%s %s (%lu bytes)\n", type, fileName, size);
+#endif
+}
+
 void archive(const char *fileName, FILE *mtarptr)
 {
   FILE *fptr = fopen(fileName, "r");
@@ -81,11 +90,7 @@ void archive(const char *fileName, FILE *mtarptr)
     char *file_content = read_file(fptr, sb.st_size);
     fwrite(file_content, sizeof(char), sb.st_size, mtarptr);
 
-#ifdef __APPLE__
-    printf("archived %s (%lld bytes)\n", fileName, sb.st_size);
-#else
-    printf("archived %s (%lu bytes)\n", fileName, sb.st_size);
-#endif
+    print_status("archived", fileName, sb.st_size);
 
     free(file_content);
     fclose(fptr);
@@ -145,11 +150,9 @@ void extract(const char *mtarname)
 
     fwrite(file_content, sizeof(char), sb.st_size, fptr);
 
-#ifdef __APPLE__
-    printf("extracted %s (%lld bytes)\n", fileName, sb.st_size);
-#else
-    printf("extracted %s (%lu bytes)\n", fileName, sb.st_size);
-#endif
+    print_status("extracted", fileName, sb.st_size);
+
+    fclose(fptr);
 
     struct utimbuf tb;
 #ifdef __APPLE__
@@ -165,7 +168,6 @@ void extract(const char *mtarname)
       exit(1);
     }
 
-    fclose(fptr);
     free(fileName);
     free(file_content);
   }
